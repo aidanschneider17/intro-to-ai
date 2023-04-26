@@ -73,7 +73,20 @@ class Problem(ABC, Generic[T]):
         :return: index of individual to choose
         """
 
-        return 0
+        sum_weights = sum(weights)
+        current_probability = 0.0
+        probabilities = []
+
+        for w in weights:
+            probability = w / sum_weights
+            probabilities.append(probability+current_probability)
+            current_probability += probability
+
+        random_value = random.random()
+
+        for i in range(len(probabilities)):
+            if probabilities[i] >= random_value:
+                return i
 
     def crossover(self, parent1:T, parent2:T) -> T:
         """
@@ -128,7 +141,7 @@ class NNClassification(Problem[NeuralNetwork]):
         The training data would have four samples: [[0,0,0],[0,1,1],[1,0,1],[1,1,1]].
         For each sample, the first two values would be the input and the last value
         would be the expected output. So for the first sample, [0,0] would be the
-        input to the network and [1] would be the expected output.
+        input to the network and [0] would be the expected output.
         :param current: Current state which is a NeuralNetwork object
         :return: Score that represents how close the output of the network
         matches the expected output across all the samples in the training data
@@ -165,8 +178,9 @@ class NNClassification(Problem[NeuralNetwork]):
         :param parent2: NeuralNetwork object that has a list of normal and bias weight values
         :return: New child which is a NeuralNetwork object
         """
-
-        return parent1
+        cw = random.randint(0, len(parent1.weight_values))
+        cb = random.randint(0, len(parent1.bias_values))
+        return single_point_crossover_NN(parent1, parent2, cw, cb)
 
     def single_point_crossover_NN(self, parent1:T, parent2:T, cw:int, cb:int) -> T:
         """H
@@ -177,8 +191,27 @@ class NNClassification(Problem[NeuralNetwork]):
         :param cw: Crossover point for the normal weight values
         :param cb: Crossover point for the biasa weight values
         """
+        child_weights = [];
+        child_bias = [];
 
-        return parent1
+        for i in range(len(parent1.weight_values)):
+            if i < cw:
+                child_weights.append(parent1.weight_values[i])
+            else:
+                child_weights.append(parent2.weight_values[i])
+
+        for i in range(len(parent1.bias_values))
+            if i < cb:
+                child_bias.append(parent1.bias_values[i])
+            else:
+                child_bias.append(parent2.bias_values[i])
+
+        child = NeuralNetwork(parent1.layers)
+        child.weight_values(child_weights)
+        child.bias_values(child_bias)
+
+        return child
+
 
     def mutate(self, child:T) -> T:
         """
@@ -191,7 +224,18 @@ class NNClassification(Problem[NeuralNetwork]):
         :param child:
         :return:
         """
-        ret = copy(child)
+        weight_prob = 1 / len(child.weight_values)
+        bias_prob = 1 / len(child.bias_values)
+
+        for i in range(len(child.weight_values)):
+            if random.random() < weight_prob:
+                child = mutate_weight(child, i, True)
+
+        for i in range(len(child.bias_values)):
+            if random.random() < bias_prob:
+                child = mutate_weight(child, i, False)
+
+        return child
 
         return ret
     def mutate_weight(self, child: T, weight_index: int, normal_weight:bool = True) -> T:
@@ -205,6 +249,6 @@ class NNClassification(Problem[NeuralNetwork]):
         :param normal_weight: Whether the mutated weight is in the normal weights or bias weights list
         :return: Genome that has been mutated
         """
-        ret = copy(child)
+        
 
-        return ret
+        return child
