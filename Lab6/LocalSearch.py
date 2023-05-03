@@ -57,5 +57,30 @@ def Genetic_Algorithm(problem:Problem, initial:List[T], num_epochs:int=10,):
     :return: Individual with the best fitness found after num_epochs or until a solution is found
     """
 
-    return initial[0]
+    population = initial
+    current_epochs = 0
+
+    while current_epochs < num_epochs:
+        weights = []
+        for p in population:
+            weights.append(problem.evaluation(p))
+        if 1.0 in weights:
+            return population[weights.index(1.0)]
+
+        parents = problem.selection(population, weights, len(population))
+        population2 = []
+        for i in range(1, len(parents)+1):
+            if i < len(parents):
+                child = problem.crossover(parents[i-1], parents[i])
+            else:
+                child = problem.crossover(parents[0], parents[-1])
+            child = problem.mutate(child)
+            population2.append(child)
+
+        population = population2
+
+        current_epochs += 1
+
+    return population[np.argmax(weights)]
+
 

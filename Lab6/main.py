@@ -12,10 +12,11 @@ def Run_Genetic_Algorithm(problem: Problem, restarts: int = 1, visualize: bool =
     solutions = []
     initial_population = [problem.random_state() for _ in range(POP_SIZE)]
     for i in range(restarts):
+        print(i)
         ans = Genetic_Algorithm(problem, initial_population, NUM_EPOCHS)
         score = problem.evaluation(ans)
         avg_score += score
-        if score == 1:
+        if score == 1.0:
             rate += 1
         solutions.append((score,ans))
     print("Genetic Algorithm with restarts.")

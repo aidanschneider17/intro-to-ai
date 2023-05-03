@@ -95,7 +95,7 @@ class NeuralNetwork():
         return B
 
 
-    def step(self, input:List[float]) -> Tuple[List[float],List[float]]:
+    def step(self, inputs:List[float]) -> Tuple[List[float],List[float]]:
         """
         Performs a single feed forward pass of the network.
         :param input: Single sample of the inputs. Length should be the same
@@ -108,13 +108,26 @@ class NeuralNetwork():
         # 3. Iterate and calculate the activation for all the layers.
         # The activation for the input layer is just the input arguments that are passed in.
         # For every other layer, calculate its pre-activation (h), which is the weight sum of its inputs.
-        # Use numpy's matrix multiplications to mutiple the inputs of a layer by its weights (W) and then add the bias (B).
+        # Use numpy's matrix multiplications to mutiply the inputs of a layer by its weights (W) and then add the bias (B).
         # The input of each non-input layer is the activation of the prior layer.
         # Feed the preactivation through an activation function (g) to get the final activation of that layer.
         # Activation function for the output (last) layer should be heavyside.
         # Activation function for every other layer should be sigmoid.
         # 4. Return the activation of the last layer.
-        return [0]
+        weights = self.develop_weights()
+        bias = self.develop_bias()
+
+        activations = [inputs]
+
+        for i in range(0, len(self._layers)-1):
+            h = np.matmul(activations[i], weights[i]) + bias[i]
+            if i != len(self._layers) - 2:
+                activations.append(self.sigmoid(h))
+            else:
+                return self.heavyside(h)
+
+
+
 
 
     def sigmoid(self, x):

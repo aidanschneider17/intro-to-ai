@@ -127,6 +127,7 @@ class NNClassification(Problem[NeuralNetwork]):
         super().__init__()
         self._training_data = training_data
         self._layers = layers
+        self.calls = 0
 
 
     def evaluation(self, current:T) -> float:
@@ -146,8 +147,16 @@ class NNClassification(Problem[NeuralNetwork]):
         :return: Score that represents how close the output of the network
         matches the expected output across all the samples in the training data
         """
+        sum_eval = 0
+        self.calls += 1
+        #print(self.calls)
 
-        return 0.1
+        for t in self._training_data:
+            sum_eval += 0.5 * ((t[len(t)-1] - current.step(t[0:len(t)-1])[0]) ** 2)
+
+        return 1 - ((1/len(self._training_data)) * sum_eval)
+
+        
 
 
     def random_state(self) -> T:
@@ -180,7 +189,7 @@ class NNClassification(Problem[NeuralNetwork]):
         """
         cw = random.randint(0, len(parent1.weight_values))
         cb = random.randint(0, len(parent1.bias_values))
-        return single_point_crossover_NN(parent1, parent2, cw, cb)
+        return self.single_point_crossover_NN(parent1, parent2, cw, cb)
 
     def single_point_crossover_NN(self, parent1:T, parent2:T, cw:int, cb:int) -> T:
         """H
@@ -200,15 +209,15 @@ class NNClassification(Problem[NeuralNetwork]):
             else:
                 child_weights.append(parent2.weight_values[i])
 
-        for i in range(len(parent1.bias_values))
+        for i in range(len(parent1.bias_values)):
             if i < cb:
                 child_bias.append(parent1.bias_values[i])
             else:
                 child_bias.append(parent2.bias_values[i])
 
         child = NeuralNetwork(parent1.layers)
-        child.weight_values(child_weights)
-        child.bias_values(child_bias)
+        child.weight_values = child_weights
+        child.bias_values = child_bias
 
         return child
 
@@ -229,15 +238,14 @@ class NNClassification(Problem[NeuralNetwork]):
 
         for i in range(len(child.weight_values)):
             if random.random() < weight_prob:
-                child = mutate_weight(child, i, True)
+                child = self.mutate_weight(child, i, True)
 
         for i in range(len(child.bias_values)):
             if random.random() < bias_prob:
-                child = mutate_weight(child, i, False)
+                child = self.mutate_weight(child, i, False)
 
         return child
-
-        return ret
+    
     def mutate_weight(self, child: T, weight_index: int, normal_weight:bool = True) -> T:
         """
         Performs a bit-mutation on the passed in list of weights. Add a random uniform
@@ -249,6 +257,9 @@ class NNClassification(Problem[NeuralNetwork]):
         :param normal_weight: Whether the mutated weight is in the normal weights or bias weights list
         :return: Genome that has been mutated
         """
-        
+        if normal_weight:
+            child.weight_values[weight_index] += random.uniform(-1.0, 1.0)
+        else:
+            child.bias_values[weight_index] += random.uniform(-1.0, 1.0)
 
         return child
